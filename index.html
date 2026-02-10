@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Be My Valentine?</title>
+  <style>
+    :root {
+      --bg1: #0f1020;
+      --bg2: #1b1d3a;
+      --card: rgba(255, 255, 255, 0.08);
+      --border: rgba(255, 255, 255, 0.18);
+      --text: #f7f7ff;
+      --muted: rgba(247,247,255,0.72);
+      --pink: #ff4d8d;
+      --pink2: #ff7ab3;
+      --shadow: 0 18px 50px rgba(0,0,0,0.35);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(1200px 800px at 20% 10%, rgba(255,77,141,0.25), transparent 55%),
+        radial-gradient(900px 700px at 90% 30%, rgba(255,122,179,0.18), transparent 60%),
+        linear-gradient(160deg, var(--bg1), var(--bg2));
+      overflow: hidden;
+    }
+
+    .card {
+      width: min(520px, 92vw);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 28px 24px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      position: relative;
+      z-index: 2;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(26px, 3.6vw, 34px);
+      letter-spacing: 0.2px;
+    }
+    p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      padding-top: 8px;
+    }
+
+    button {
+      border: none;
+      cursor: pointer;
+      border-radius: 999px;
+      padding: 12px 18px;
+      font-weight: 700;
+      font-size: 16px;
+      transition: transform 140ms ease, filter 140ms ease;
+      user-select: none;
+    }
+    button:active { transform: scale(0.98); }
+
+    #yesBtn {
+      background: linear-gradient(135deg, var(--pink), var(--pink2));
+      color: white;
+      box-shadow: 0 10px 28px rgba(255,77,141,0.35);
+      transform: scale(var(--yesScale, 1));
+    }
+    #yesBtn:hover { filter: brightness(1.06); }
+
+    #noBtn {
+      background: rgba(255,255,255,0.10);
+      color: rgba(255,255,255,0.88);
+      border: 1px solid rgba(255,255,255,0.20);
+    }
+    #noBtn:hover { filter: brightness(1.06); }
+
+    .status {
+      margin-top: 16px;
+      text-align: center;
+      min-height: 1.4em;
+      font-weight: 600;
+      color: rgba(255,255,255,0.85);
+    }
+
+    .tiny {
+      font-size: 12px;
+      color: rgba(247,247,255,0.55);
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    /* Balloons */
+    .balloons {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 1;
+      opacity: 0;
+      transition: opacity 250ms ease;
+    }
+    .balloons.show { opacity: 1; }
+
+    .balloon {
+      position: absolute;
+      bottom: -120px;
+      width: 56px;
+      height: 74px;
+      border-radius: 50% 50% 48% 48%;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.85), rgba(255,255,255,0) 35%),
+                  linear-gradient(160deg, rgba(255,77,141,0.95), rgba(255,122,179,0.85));
+      box-shadow: 0 18px 35px rgba(0,0,0,0.25);
+      animation: floatUp linear infinite;
+      transform: translateX(0);
+    }
+
+    .balloon::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: -8px;
+      width: 10px;
+      height: 10px;
+      background: inherit;
+      transform: translateX(-50%) rotate(45deg);
+      border-radius: 2px;
+      filter: brightness(0.95);
+    }
+
+    .string {
+      position: absolute;
+      left: 50%;
+      top: 72px;
+      width: 2px;
+      height: 120px;
+      background: rgba(255,255,255,0.45);
+      transform: translateX(-50%);
+      border-radius: 2px;
+    }
+
+    @keyframes floatUp {
+      from { transform: translateY(0) translateX(0); }
+      to   { transform: translateY(-120vh) translateX(var(--drift, 0px)); }
+    }
+
+    /* Confetti-ish sparkles */
+    .sparkle {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+      background: rgba(255,255,255,0.9);
+      pointer-events: none;
+      z-index: 3;
+      animation: pop 900ms ease forwards;
+      mix-blend-mode: screen;
+    }
+    @keyframes pop {
+      0%   { transform: translate(-50%,-50%) scale(0.6) rotate(0deg); opacity: 0; }
+      15%  { opacity: 1; }
+      100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.9) rotate(220deg); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="balloons" id="balloons"></div>
+
+  <div class="card" role="dialog" aria-labelledby="title">
+    <h1 id="title">Meri Jaan, Meri Namiiiii, Meri Alooooo, Meri Baby, Will you be my Valentine? 💘</h1>
+    <p>Pick one… no pressure (I dare you to press NO, I dare YOU 😅).</p>
+
+    <div class="buttons">
+      <button id="yesBtn" type="button">Yes 💖</button>
+      <button id="noBtn" type="button">No 🙃</button>
+    </div>
+
+    <div class="status" id="status"></div>
+    <div class="tiny">Tip: if “No” gets clicked, “Yes” gets bigger.</div>
+  </div>
+
+  <script>
+    const yesBtn = document.getElementById("yesBtn");
+    const noBtn = document.getElementById("noBtn");
+    const status = document.getElementById("status");
+    const balloonsWrap = document.getElementById("balloons");
+
+    let yesScale = 1;
+    let locked = false;
+
+    function setYesScale() {
+      // clamp so it doesn't get ridiculous
+      yesScale = Math.min(2.6, yesScale);
+      document.documentElement.style.setProperty("--yesScale", yesScale.toFixed(2));
+    }
+
+    function spawnSparkles(x, y, count = 18) {
+      for (let i = 0; i < count; i++) {
+        const s = document.createElement("div");
+        s.className = "sparkle";
+        const dx = (Math.random() * 220 - 110).toFixed(0) + "px";
+        const dy = (Math.random() * 220 - 140).toFixed(0) + "px";
+        s.style.left = x + "px";
+        s.style.top = y + "px";
+        s.style.setProperty("--dx", dx);
+        s.style.setProperty("--dy", dy);
+        s.style.background = Math.random() > 0.5
+          ? "rgba(255,77,141,0.95)"
+          : "rgba(255,255,255,0.92)";
+        document.body.appendChild(s);
+        s.addEventListener("animationend", () => s.remove());
+      }
+    }
+
+    function makeBalloons(n = 14) {
+      balloonsWrap.innerHTML = "";
+      for (let i = 0; i < n; i++) {
+        const b = document.createElement("div");
+        b.className = "balloon";
+        b.style.left = Math.random() * 100 + "vw";
+        b.style.animationDuration = (6 + Math.random() * 5).toFixed(2) + "s";
+        b.style.animationDelay = (Math.random() * 0.8).toFixed(2) + "s";
+        b.style.setProperty("--drift", ((Math.random() * 120) - 60).toFixed(0) + "px");
+
+        // vary colors a bit
+        const hue = 330 + Math.random() * 40; // pinky range
+        b.style.background =
+          `radial-gradient(circle at 30% 30%, rgba(255,255,255,0.85), rgba(255,255,255,0) 35%),
+           linear-gradient(160deg, hsla(${hue}, 100%, 65%, 0.95), hsla(${hue + 10}, 100%, 75%, 0.85))`;
+
+        const string = document.createElement("div");
+        string.className = "string";
+        b.appendChild(string);
+
+        balloonsWrap.appendChild(b);
+      }
+    }
+
+    noBtn.addEventListener("click", (e) => {
+      if (locked) return;
+      yesScale += 0.25;
+      setYesScale();
+      status.textContent = `Wrong Option Pick again`;
+      spawnSparkles(e.clientX, e.clientY, 10);
+    });
+
+    yesBtn.addEventListener("click", (e) => {
+      if (locked) return;
+      locked = true;
+
+      status.textContent = "YAY!! 🎉 See you on Valentine's Perfect Baby 💖";
+      spawnSparkles(e.clientX, e.clientY, 26);
+
+      balloonsWrap.classList.add("show");
+      makeBalloons(18);
+
+      // disable buttons for cleanliness
+      yesBtn.disabled = true;
+      noBtn.disabled = true;
+      yesBtn.style.cursor = "default";
+      noBtn.style.cursor = "default";
+      noBtn.style.opacity = "0.6";
+    });
+
+    // init
+    setYesScale();
+  </script>
+</body>
+</html>
